@@ -29,7 +29,8 @@ async function signOut(req, res) {
 async function getAllUsers(req, res) {
   try {
     const allUsers = await users.findAll();
-    res.status(200).json(allUsers);
+    res.status(200).json ({ message: `Get All Users Success`, allUsers: allUsers });
+   
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -43,7 +44,7 @@ async function getUserDetail(req, res) {
   try {
     const user = await users.findByPk(userId);
     if (user) {
-      res.status(200).json(user);
+      res.status(200).json({ message: `Get Detail ID ${userId} Success`, userDetail: user });
     } else {
       res.status(404).json({ error: 'User not found' });
     }
@@ -56,15 +57,16 @@ async function getUserDetail(req, res) {
 // Update user endpoint
 async function updateUser(req, res) {
   const userId = req.params.id;
-
+  
   try {
-    const [updatedRowsCount, updatedUser] = await users.update(req.body, {
+    const [updatedRowsCount] = await users.update(req.body, {
       where: { id: userId },
-      returning: true,
     });
 
     if (updatedRowsCount > 0) {
-      res.status(200).json(updatedUser[0]);
+      // Fetch the updated user separately
+      const updatedUser = await users.findByPk(userId);
+      res.status(200).json({ message: `Update Success for user with ID ${userId}`, userUpdated: updatedUser });
     } else {
       res.status(404).json({ error: 'User not found' });
     }
@@ -73,16 +75,27 @@ async function updateUser(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
+
+
+
 
 // Delete user endpoint
 async function deleteUser(req, res) {
   const userId = req.params.id;
 
   try {
+    const user = await users.findByPk(userId);
+
+    if (!user) {
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
     const deletedRowCount = await users.destroy({ where: { id: userId } });
 
     if (deletedRowCount > 0) {
-      res.status(204).send();
+      res.status(200).json({ message: `Delete Success for user with ID ${userId}`, deletedUser: user });
     } else {
       res.status(404).json({ error: 'User not found' });
     }
@@ -92,9 +105,11 @@ async function deleteUser(req, res) {
   }
 }
 
+
 module.exports = {
   signUp,
   signIn,
+  signOut,
   getAllUsers,
   getUserDetail,
   updateUser,

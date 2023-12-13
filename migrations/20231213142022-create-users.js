@@ -10,19 +10,23 @@ module.exports = {
         type: Sequelize.INTEGER
       },
       usernames: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING(50)
       },
       email: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING(50)
       },
       password: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING(50)
       },
       telephone: {
-        type: Sequelize.BIGINT
+        type: Sequelize.BIGINT(50)
       },
       picture: {
-        type: Sequelize.STRING
+        type: Sequelize.STRING(50)
+      },
+      role: {
+        type: Sequelize.STRING,
+        defaultValue: 'user', // admin
       },
       createdAt: {
         allowNull: false,

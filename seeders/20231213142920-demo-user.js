@@ -1,4 +1,6 @@
+/* eslint-disable import/no-extraneous-dependencies */
 const bcrypt = require('bcrypt');
+const { nanoid } = require('nanoid');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
@@ -7,6 +9,7 @@ module.exports = {
 
     await queryInterface.bulkInsert('users', [
       {
+        id: nanoid(21), // Generate nanoid with length 21
         usernames: 'admin',
         email: 'admin@example.com',
         password: hashedPassword,

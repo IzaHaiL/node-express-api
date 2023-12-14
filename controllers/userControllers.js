@@ -1,8 +1,11 @@
-const { users } = require('../models');
+/* eslint-disable no-console */
+/* eslint-disable consistent-return */
 const bcrypt = require('bcrypt');
 const { Op } = require('sequelize');
-
-const { generateAccessToken, generateRefreshToken, clearToken , authData , isUserOwner} = require('../middlewares/auth');
+const { users } = require('../models');
+const {
+  generateAccessToken, clearToken, authData, isUserOwner, isAdmin,
+} = require('../middlewares/auth');
 
 // Sign up endpoint
 async function signUp(req, res) {
@@ -28,11 +31,11 @@ async function signUp(req, res) {
       password: hashedPassword,
       // Add other fields as needed
     });
-    // Uncoment code below if you want Generate access and refresh tokens
+    // Uncomment code below if you want to generate access and refresh tokens
     // const accessToken = generateAccessToken(newUser);
     // const refreshToken = generateRefreshToken(newUser);
 
-    res.status(200).json({
+    return res.status(200).json({
       message: `Register user with usernames ${usernames} Success`,
       user: newUser,
       // accessToken,
@@ -40,9 +43,10 @@ async function signUp(req, res) {
     });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ error: 'Internal Server Error' });
+    return res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
 // Sign in endpoint
 async function signIn(req, res) {
   const { usernames, password } = req.body;
@@ -75,10 +79,11 @@ async function signIn(req, res) {
   }
 }
 
+// Sign out endpoint
 async function signOut(req, res) {
   try {
     // For example, clear token on the client side and then add it to the blacklist
-    const token = req.headers['authorization'] && req.headers['authorization'].split(' ')[1];
+    const token = req.headers.authorization && req.headers.authorization.split(' ')[1];
     // Check if the token is provided
     if (!token) {
       return res.status(401).json({ error: 'Unauthorized: Token not provided' });
@@ -102,17 +107,18 @@ async function signOut(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
 // Get all users endpoint
-async function getAllUsers(req, res) {
+async function getAllUsers(res) {
   try {
     const allUsers = await users.findAll();
-    res.status(200).json ({ message: `Get All Users Success`, allUsers: allUsers });
-   
+    res.status(200).json({ message: 'Get All Users Success', allUsers });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
 // Get user detail endpoint
 async function getUserDetail(req, res) {
   const userId = req.params.id;
@@ -129,11 +135,12 @@ async function getUserDetail(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
 // Update user endpoint
 async function updateUser(req, res) {
   const userId = req.params.id;
   try {
-    // Use the isUserOwner middleware to check if the authenticated user is the owner of the resource
+    // Use the isUserOwner middleware to check if the authenticated user is the owner of the resourc
     isUserOwner(req, res, async () => {
       // Check if the request body contains the 'password' field
       if (req.body.password) {
@@ -178,10 +185,10 @@ async function updateUser(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
+
 // Delete user endpoint
 async function deleteUser(req, res) {
   const userIdToDelete = req.params.id;
-  const { userId, role } = req.user; // Extract userId and role from the authenticated user
 
   try {
     // Use the isAdmin middleware to check if the authenticated user is an admin
@@ -206,7 +213,6 @@ async function deleteUser(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
 
 module.exports = {
   signUp,

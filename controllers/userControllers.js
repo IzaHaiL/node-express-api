@@ -95,7 +95,6 @@ async function signOut(req, res) {
 
       res.status(200).json({ message: `Sign-out successful for user ID ${userId} Usernames ${usernames}`, userId, usernames });
     } else {
-      // Handle case where user information is not available
       res.status(401).json({ error: 'Unauthorized: User information not available' });
     }
   } catch (error) {
@@ -122,11 +121,11 @@ async function getUserDetail(req, res) {
 
   try {
     const user = await users.findByPk(userId);
-    if (user) {
-      res.status(200).json({ message: `Get Detail ID ${userId} Success`, userDetail: user });
-    } else {
-      res.status(404).json({ error: 'User not found' });
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
     }
+
+    res.status(200).json({ message: `Get Detail ID ${userId} Success`, userDetail: user });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

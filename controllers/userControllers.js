@@ -1,10 +1,37 @@
 const { users } = require('../models');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 // Sign up endpoint
 async function signUp(req, res) {
+  console.log('Entire Request Body:', req.body);
+  const { usernames, email, password } = req.body;
+
   try {
-    const newUser = await users.create(req.body);
-    res.status(201).json(newUser);
+    // Check if required fields are provided
+    if (!usernames || !email || !password) {
+      return res.status(400).json({ error: 'Username, email, and password are required' });
+    }
+
+    // Check if a user with the provided email already exists
+    const existingUser = await users.findOne({ where: { email } });
+    if (existingUser) {
+      return res.status(400).json({ error: 'User with this email already exists' });
+    }
+
+    // Trim the password and then hash it
+    const trimmedPassword = password.trim();
+    const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
+
+    // Create a new user
+    const newUser = await users.create({
+      usernames,
+      email,
+      password: hashedPassword,
+      // Add other fields as needed
+    });
+
+    res.status(200).json({ message: `Register user with usernames ${usernames} Success`,newUser});
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -13,16 +40,57 @@ async function signUp(req, res) {
 
 // Sign in endpoint
 async function signIn(req, res) {
-  // TODO: Implement sign in logic
-  // This might involve checking the provided credentials and generating a token
-  res.status(501).json({ error: 'Not Implemented' });
+  const { usernames, password } = req.body;
+  try {
+    // Find the user by usernames
+    const user = await users.findOne({ where: { usernames } });
+
+    // Check if the user exists
+    if (!user) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    // Check if the provided password matches the stored hashed password
+    const passwordMatch = await bcrypt.compare(password, user.password);
+
+    if (!passwordMatch) {
+      return res.status(401).json({ error: 'Invalid password' });
+    }
+
+    // Generate a token (you may use a library like jsonwebtoken)
+    const token = jwt.sign(
+      {
+        userId: user.id,
+        usernames: user.usernames,
+        email: user.email,
+        role: user.role,
+      },
+      'jwtsementara',
+      {
+        expiresIn: '1h', // Token expiration time (adjust as needed)
+      }
+    );
+
+    // Include user information in the response
+    const userResponse = {
+      userId: user.id,
+      usernames: user.usernames,
+      email: user.email,
+      role: user.role,
+      // Add other user details as needed
+    };
+
+    res.status(200).json({ message: `Login User ID ${user.id} Success`, token, user: userResponse });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 }
 
 // Sign out endpoint
 async function signOut(req, res) {
-  // TODO: Implement sign out logic
-  // This might involve clearing the user's session, token, or performing any necessary actions
-  res.status(501).json({ error: 'Not Implemented' });
+  // TODO: Implement sign-out logic
+  // For example, if you're using tokens, you might want to clear the token on the client side
+  res.status(200).json({ message: 'Sign-out successful' });
 }
 
 // Get all users endpoint

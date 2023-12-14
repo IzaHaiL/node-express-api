@@ -2,7 +2,7 @@
   "development": {
     "username": "root",
     "password": null,
-    "database": "waygo_db",
+    "database": "node_express_api_db",
     "host": "localhost",
     "dialect": "mysql"
   },

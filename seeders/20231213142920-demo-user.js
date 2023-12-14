@@ -1,17 +1,19 @@
 'use strict';
+const bcrypt = require('bcrypt');
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
   async up(queryInterface, Sequelize) {
-    // Add seed commands here
+    const hashedPassword = await bcrypt.hash('admin', 10);
+
     await queryInterface.bulkInsert('users', [
       {
-        usernames: 'default_user',
-        email: 'default_user@example.com',
-        password: 'hashed_password', // Replace with the hashed password
+        usernames: 'admin',
+        email: 'admin@example.com',
+        password: hashedPassword,
         telephone: 1234567890,
         picture: 'default_picture_url',
-        role: 'user',
+        role: 'admin',
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -20,7 +22,6 @@ module.exports = {
   },
 
   async down(queryInterface, Sequelize) {
-    // Remove seed commands here
     await queryInterface.bulkDelete('users', null, {});
   }
 };

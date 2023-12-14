@@ -28,15 +28,15 @@ async function signUp(req, res) {
       password: hashedPassword,
       // Add other fields as needed
     });
-    // Generate access and refresh tokens
-    const accessToken = generateAccessToken(newUser);
-    const refreshToken = generateRefreshToken(newUser);
+    // Uncoment code below if you want Generate access and refresh tokens
+    // const accessToken = generateAccessToken(newUser);
+    // const refreshToken = generateRefreshToken(newUser);
 
     res.status(200).json({
       message: `Register user with usernames ${usernames} Success`,
       user: newUser,
-      accessToken,
-      refreshToken,
+      // accessToken,
+      // refreshToken,
     });
   } catch (error) {
     console.error(error);
@@ -102,7 +102,6 @@ async function signOut(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
 // Get all users endpoint
 async function getAllUsers(req, res) {
   try {

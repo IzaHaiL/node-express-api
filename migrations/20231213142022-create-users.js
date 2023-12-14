@@ -16,13 +16,13 @@ module.exports = {
         type: Sequelize.STRING(50)
       },
       password: {
-        type: Sequelize.STRING(50)
+        type: Sequelize.STRING(255)
       },
       telephone: {
         type: Sequelize.BIGINT(50)
       },
       picture: {
-        type: Sequelize.STRING(50)
+        type: Sequelize.STRING(255)
       },
       role: {
         type: Sequelize.STRING,

@@ -1,6 +1,6 @@
 const { users } = require('../models');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+const { generateAccessToken, generateRefreshToken, clearToken , authData} = require('../middlewares/auth');
 
 // Sign up endpoint
 async function signUp(req, res) {
@@ -12,17 +12,14 @@ async function signUp(req, res) {
     if (!usernames || !email || !password) {
       return res.status(400).json({ error: 'Username, email, and password are required' });
     }
-
     // Check if a user with the provided email already exists
     const existingUser = await users.findOne({ where: { email } });
     if (existingUser) {
       return res.status(400).json({ error: 'User with this email already exists' });
     }
-
     // Trim the password and then hash it
     const trimmedPassword = password.trim();
     const hashedPassword = await bcrypt.hash(trimmedPassword, 10);
-
     // Create a new user
     const newUser = await users.create({
       usernames,
@@ -30,8 +27,16 @@ async function signUp(req, res) {
       password: hashedPassword,
       // Add other fields as needed
     });
+    // Generate access and refresh tokens
+    const accessToken = generateAccessToken(newUser);
+    const refreshToken = generateRefreshToken(newUser);
 
-    res.status(200).json({ message: `Register user with usernames ${usernames} Success`,newUser});
+    res.status(200).json({
+      message: `Register user with usernames ${usernames} Success`,
+      user: newUser,
+      accessToken,
+      refreshToken,
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
@@ -44,32 +49,17 @@ async function signIn(req, res) {
   try {
     // Find the user by usernames
     const user = await users.findOne({ where: { usernames } });
-
     // Check if the user exists
     if (!user) {
       return res.status(404).json({ error: 'User not found' });
     }
     // Check if the provided password matches the stored hashed password
     const passwordMatch = await bcrypt.compare(password, user.password);
-
     if (!passwordMatch) {
       return res.status(401).json({ error: 'Invalid password' });
     }
-
-    // Generate a token (you may use a library like jsonwebtoken)
-    const token = jwt.sign(
-      {
-        userId: user.id,
-        usernames: user.usernames,
-        email: user.email,
-        role: user.role,
-      },
-      'jwtsementara',
-      {
-        expiresIn: '1h', // Token expiration time (adjust as needed)
-      }
-    );
-
+    // Generate an access token
+    const accessToken = generateAccessToken(user);
     // Include user information in the response
     const userResponse = {
       userId: user.id,
@@ -78,19 +68,40 @@ async function signIn(req, res) {
       role: user.role,
       // Add other user details as needed
     };
-
-    res.status(200).json({ message: `Login User ID ${user.id} Success`, token, user: userResponse });
+    res.status(200).json({ message: `Login User ID ${user.id} Success`, accessToken, user: userResponse });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
 
-// Sign out endpoint
 async function signOut(req, res) {
-  // TODO: Implement sign-out logic
-  // For example, if you're using tokens, you might want to clear the token on the client side
-  res.status(200).json({ message: 'Sign-out successful' });
+  try {
+    // For example, clear token on the client side and then add it to the blacklist
+    const token = req.headers['authorization'] && req.headers['authorization'].split(' ')[1];
+    // Check if the token is provided
+    if (!token) {
+      return res.status(401).json({ error: 'Unauthorized: Token not provided' });
+    }
+    // Check if the token is in the blacklist
+    if (authData.blacklistedTokens.includes(token)) {
+      return res.status(401).json({ error: 'Unauthorized: Token has been revoked' });
+    }
+    // Check if user information is available
+    if (req.user && req.user.userId && req.user.usernames) {
+      const { userId, usernames } = req.user;
+      // Clear (blacklist) the token
+      clearToken(token);
+
+      res.status(200).json({ message: `Sign-out successful for user ID ${userId} Usernames ${usernames}`, userId, usernames });
+    } else {
+      // Handle case where user information is not available
+      res.status(401).json({ error: 'Unauthorized: User information not available' });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
 }
 
 // Get all users endpoint
@@ -143,10 +154,6 @@ async function updateUser(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
-
-
-
 
 // Delete user endpoint
 async function deleteUser(req, res) {

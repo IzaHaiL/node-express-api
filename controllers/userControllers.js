@@ -1,12 +1,13 @@
 const { users } = require('../models');
 const bcrypt = require('bcrypt');
-const { generateAccessToken, generateRefreshToken, clearToken , authData} = require('../middlewares/auth');
+const { Op } = require('sequelize');
+
+const { generateAccessToken, generateRefreshToken, clearToken , authData , isUserOwner} = require('../middlewares/auth');
 
 // Sign up endpoint
 async function signUp(req, res) {
   console.log('Entire Request Body:', req.body);
   const { usernames, email, password } = req.body;
-
   try {
     // Check if required fields are provided
     if (!usernames || !email || !password) {
@@ -42,7 +43,6 @@ async function signUp(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
 // Sign in endpoint
 async function signIn(req, res) {
   const { usernames, password } = req.body;
@@ -114,7 +114,6 @@ async function getAllUsers(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
 // Get user detail endpoint
 async function getUserDetail(req, res) {
   const userId = req.params.id;
@@ -131,48 +130,78 @@ async function getUserDetail(req, res) {
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
 // Update user endpoint
 async function updateUser(req, res) {
   const userId = req.params.id;
-  
   try {
-    const [updatedRowsCount] = await users.update(req.body, {
-      where: { id: userId },
-    });
+    // Use the isUserOwner middleware to check if the authenticated user is the owner of the resource
+    isUserOwner(req, res, async () => {
+      // Check if the request body contains the 'password' field
+      if (req.body.password) {
+        // Trim the password and then hash it
+        const trimmedPassword = req.body.password.trim();
+        req.body.password = await bcrypt.hash(trimmedPassword, 10);
+      }
 
-    if (updatedRowsCount > 0) {
-      // Fetch the updated user separately
-      const updatedUser = await users.findByPk(userId);
-      res.status(200).json({ message: `Update Success for user with ID ${userId}`, userUpdated: updatedUser });
-    } else {
-      res.status(404).json({ error: 'User not found' });
-    }
+      // Exclude 'usernames' and 'role' from req.body to prevent updating them
+      delete req.body.usernames;
+      delete req.body.role;
+
+      // Check if the request body contains the 'email' field
+      if (req.body.email) {
+        // Check if the provided email already exists in the database for another user
+        const existingUser = await users.findOne({
+          where: {
+            email: req.body.email,
+            id: { [Op.not]: userId }, // Exclude the current user's ID
+          },
+        });
+
+        if (existingUser) {
+          return res.status(400).json({ error: 'Email already exists for another user' });
+        }
+      }
+
+      const [updatedRowsCount] = await users.update(req.body, {
+        where: { id: userId },
+      });
+
+      if (updatedRowsCount > 0) {
+        // Fetch the updated user separately
+        const updatedUser = await users.findByPk(userId);
+        res.status(200).json({ message: `Update Success for user with ID ${userId}`, userUpdated: updatedUser });
+      } else {
+        res.status(404).json({ error: 'User not found' });
+      }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });
   }
 }
-
 // Delete user endpoint
 async function deleteUser(req, res) {
-  const userId = req.params.id;
+  const userIdToDelete = req.params.id;
+  const { userId, role } = req.user; // Extract userId and role from the authenticated user
 
   try {
-    const user = await users.findByPk(userId);
-
-    if (!user) {
-      res.status(404).json({ error: 'User not found' });
-      return;
-    }
-
-    const deletedRowCount = await users.destroy({ where: { id: userId } });
-
-    if (deletedRowCount > 0) {
-      res.status(200).json({ message: `Delete Success for user with ID ${userId}`, deletedUser: user });
-    } else {
-      res.status(404).json({ error: 'User not found' });
-    }
+    // Use the isAdmin middleware to check if the authenticated user is an admin
+    isAdmin(req, res, async () => {
+      const userToDelete = await users.findByPk(userIdToDelete);
+      if (!userToDelete) {
+        return res.status(404).json({ error: 'User not found' });
+      }
+      // Check if the user to delete is an admin
+      if (userToDelete.role === 'admin') {
+        return res.status(403).json({ error: 'Forbidden: Cannot delete an admin user' });
+      }
+      const deletedRowCount = await users.destroy({ where: { id: userIdToDelete } });
+      if (deletedRowCount > 0) {
+        res.status(200).json({ message: `Delete Success for user with ID ${userIdToDelete}`, deletedUser: userToDelete });
+      } else {
+        res.status(404).json({ error: 'User not found' });
+      }
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: 'Internal Server Error' });

@@ -1,4 +1,7 @@
+/* eslint-disable import/no-extraneous-dependencies */
+
 const { Model } = require('sequelize');
+const { nanoid } = require('nanoid');
 
 module.exports = (sequelize, DataTypes) => {
   class Users extends Model {
@@ -8,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   Users.init({
+    id: {
+      type: DataTypes.STRING(21), // You can adjust the length based on your needs
+      primaryKey: true,
+      defaultValue: () => nanoid(11),
+    },
     usernames: DataTypes.STRING(50),
     email: DataTypes.STRING(50),
     password: DataTypes.STRING(255),

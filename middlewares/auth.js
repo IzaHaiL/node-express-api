@@ -82,7 +82,7 @@ function isUserOwner(req, res, next) {
   const authenticatedUserId = req.user.userId; // User ID from the authenticated user's token
 
   // Check if the user is the owner of the requested resource or an admin
-  if (req.user.role === 'admin' || parseInt(requestedUserId) === parseInt(authenticatedUserId, 10)) {
+  if (req.user.role === 'admin' || requestedUserId === authenticatedUserId) {
     next(); // User is the owner or admin, proceed to the next middleware/controller
   } else {
     res.status(403).json({ error: 'Forbidden: You do not have permission to access this resource' });

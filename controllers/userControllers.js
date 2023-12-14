@@ -122,6 +122,7 @@ async function getAllUsers(res) {
 // Get user detail endpoint
 async function getUserDetail(req, res) {
   const userId = req.params.id;
+  console.log('Entire Request Body:', userId);
 
   try {
     const user = await users.findByPk(userId);

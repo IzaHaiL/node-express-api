@@ -1,43 +1,41 @@
+# Node.js Express API for User Management
 
 ![Logo](https://i.ibb.co/5ByYsKq/gambar.png)
 
-## **About**
+## About
 Node.js, a server-side JavaScript runtime, empowers developers to execute JavaScript on servers, ensuring high-performance and scalable applications. Paired with Express.js, a flexible web application framework, building APIs becomes streamlined. Express.js simplifies the development process with middleware support for HTTP request handling, a robust routing system for defining endpoints, and easy integration with various modules. The synergy of Node.js and Express.js allows developers to create efficient APIs, handling asynchronous tasks seamlessly and facilitating the integration of databases and other services. The combination offers a versatile and dynamic solution for crafting modern web APIs, making it a preferred choice for developers seeking agility and performance in their server-side applications.
 
-## **Using this Api**
+## Using this API
 To leverage the capabilities of this API, developers can follow a straightforward process. Begin by reviewing the API documentation, which provides comprehensive insights into available endpoints, request/response formats, and any required authentication. Next, obtain the necessary API key or authentication credentials to access protected resources. With the API key in hand, integrate the API into your application by making HTTP requests to the specified endpoints. Pay attention to response codes and data formats to ensure seamless communication with the API. Implement error handling mechanisms to gracefully manage unexpected scenarios. Regularly check for updates or version changes in the API documentation to stay informed about new features or improvements. By adhering to these steps and guidelines, developers can effectively harness the functionality offered by this API within their applications.
-#### Prerequisites
-* Git
-* [Node.js](https://nodejs.org/en/) (14.x) - [Download](https://nodejs.org/en/)
-* [MySql XAMPP](https://www.apachefriends.org/download.html)
-* Some plugins may have additional requirements.
 
+### Prerequisites
+- Git
+- [Node.js](https://nodejs.org/en/) (14.x) - [Download](https://nodejs.org/en/)
+- [MySQL XAMPP](https://www.apachefriends.org/download.html)
+- Some plugins may have additional requirements.
 
-#### Installation
+### Installation
 1. Git Clone https://github.com/IzaHaiL/node-express-api.git
-2. Create Database in your mysql/phpmyadmin
-4. Configure the `config.json` 
-3.  `npm install`
-4. `npx sequelize-cli db:migrate`
-5. `npx sequelize-cli db:seed:all`
-6. Start  by running `npm start` in your terminal.
-
-
-
+2. Create Database in your MySQL/PhpMyAdmin
+3. Configure the `config.json`
+4. `npm install`
+5. `npx sequelize-cli db:migrate`
+6. `npx sequelize-cli db:seed:all`
+7. Start by running `npm start` in your terminal.
 
 ## API Documentation - User Management
 
-| Name            | Endpoint         | Description                                      | Parameters                                           | Response                                            |
-| --------------- | ---------------- | ------------------------------------------------ | ---------------------------------------------------- | ---------------------------------------------------- |
-| Sign In         | **/user/sign**   | Authenticate and obtain a bearer token.           | `username (string, required)`, `password (string, required)` | `200 OK`, with a bearer token for authorized access |
-| Sign Up         | **/user/signup** | Create a new user.                                | `usernames (string, required)`, `email (string, required)`, `password (string, required)` | `201 Created`, with a success message and user details |
-| Sign Out        | **/user/signout**| Invalidate the current bearer token for sign-out. | `Authorization (string)`                            | `200 OK`, with a success message                      |
-| Get All Users   | **/user**         | Retrieve a list of all users.                    | `Authorization (string)`                            | `200 OK`, with an array of user objects             |
-| Get User Detail | **/:id**          | Retrieve details of a specific user.             | `Authorization (string)`, `id (string)`              | `200 OK`, with the requested user's details         |
-| Update User     | **/user/:id**     | Update information for a specific user.          | `Authorization (string)`, `id (string)`, `Other fields (various)` | `200 OK`, with the updated user's details            |
-| Delete User     | **/user/:id**     | Delete a specific user from the system.          | `Authorization (string)`, `id (string)`              | `204 No Content`                                     |
+| Name            | Method           | Endpoint         | Description                                      | Parameters                                           | Response                                            |
+| --------------- | ---------------  | ---------------- | ------------------------------------------------ | ---------------------------------------------------- | ---------------------------------------------------- |
+| Sign In         | **POST**         | **/user/sign**   | Authenticate and obtain a bearer token.           | `username (string, required)`, `password (string, required)` | `200 OK`, with a bearer token for authorized access |
+| Sign Up         | **POST**         | **/user/signup** | Create a new user.                                | `usernames (string, required)`, `email (string, required)`, `password (string, required)` | `201 Created`, with a success message and user details |
+| Sign Out        | **POST**         | **/user/signout**| Invalidate the current bearer token for sign-out. | `Authorization (string)`                            | `200 OK`, with a success message                      |
+| Get All Users   | **GET**          | **/user**         | Retrieve a list of all users.                    | `Authorization (string)`                            | `200 OK`, with an array of user objects             |
+| Get User Detail | **GET**          | **/:id**          | Retrieve details of a specific user.             | `Authorization (string)`, `id (string)`              | `200 OK`, with the requested user's details         |
+| Update User     | **PUT**          | **/user/:id**     | Update information for a specific user.          | `Authorization (string)`, `id (string)`, `Other fields (various)` | `200 OK`, with the updated user's details            |
+| Delete User     | **DELETE**       | **/user/:id**     | Delete a specific user from the system.          | `Authorization (string)`, `id (string)`              | `204 No Content`                                     |
 
-## Description
+## Method Descriptions
 
 - The **Sign Up** endpoint creates a new user. The `usernames`, `email`, and `password` parameters are all required.
 
